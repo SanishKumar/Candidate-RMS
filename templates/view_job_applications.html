@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="container mt-5">
+        {% if user.profile.is_hr %}
+        <h1 class="display-4">Your Released Jobs and Applicants</h1>
+        {% elif user.profile.is_teamlead or user.profile.is_teamMember %}
+        <h1 class="display-4">See Applicants Forwarded by HR </h1>
+        {% elif user.profile.is_manager %}
+        <h1 class="display-4">See Applicants Forwarded by Team Leads </h1>
+        {% elif user.profile.is_mainHr %}
+        <h1 class="display-4">See Applicants Forwarded by Managers </h1>
+        {% endif %}
+        <hr class="my-4">
+        {% if jobs_with_applicants %}
+        {% for job_info in jobs_with_applicants %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ job_info.job_name }}</h5>
+                    <p class="card-text">Location: {{ job_info.job_location }}, Type: {{ job_info.job_type }}</p>
+                    <p class="card-text">Number of Applicants: {{ job_info.num_applicants }}</p>
+                    <a href="{% url 'view_applicants' job_info.slug %}" class="btn btn-primary">View Applicants</a>
+                </div>
+            </div>
+        {% endfor %}
+        {% else %}
+        <h4 class="text-center">No Jobs Released Yet</h4>
+        {% endif %}
+    </div>
+{% endblock content %}

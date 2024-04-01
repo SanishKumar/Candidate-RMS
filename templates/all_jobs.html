@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+       <div class="container mt-5">
+        <h1>All Jobs</h1>
+        
+        <ul class="list-group">
+            {% for job in jobs %}
+                <li class="list-group-item">
+                    <a href="{% url 'job_detail' job.id %}" class="text-decoration-none">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h5>{{ job.job_name }}</h5>
+                            </div>
+                            <div class="col-md-4">
+                                <p>{{ job.job_location }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p>{{ job.job_type }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+{% endblock %}

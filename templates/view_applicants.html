@@ -1,0 +1,1023 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="display-4">Applicants for {{ job.job_name }}</h1>
+        <ul class="nav nav-tabs" id="applicantTabs" role="tablist">
+            {% if user.profile.is_teamlead %}
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="new-tab" data-bs-toggle="tab" href="#new" role="tab" aria-controls="new" aria-selected="true">Not Reviewed Applications</a>
+            </li>
+            {% else %}
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="new-tab" data-bs-toggle="tab" href="#new" role="tab" aria-controls="new" aria-selected="true">New Applicants</a>
+            </li>
+            {% endif %}
+            {% if user.profile.is_teamlead %}
+                
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="reviewedByYou-tab" data-bs-toggle="tab" href="#reviewedByYou" role="tab" aria-controls="reviewedByYou" aria-selected="true">Reviewed by You</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="reviewedByTeamMembers-tab" data-bs-toggle="tab" href="#reviewedByTeamMembers" role="tab" aria-controls="reviewedByTeamMembers" aria-selected="false">Reviewed by Team Members</a>
+            </li>    
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="finalreviewed-tab" data-bs-toggle="tab" href="#finalreviewed" role="tab" aria-controls="finalreviewed" aria-selected="false">Give Final Review </a>
+            </li> 
+            {% endif %}
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="accepted-tab" data-bs-toggle="tab" href="#accepted" role="tab" aria-controls="accepted" aria-selected="false">Accepted Applicants</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="rejected-tab" data-bs-toggle="tab" href="#rejected" role="tab" aria-controls="rejected" aria-selected="false">Rejected Applicants</a>
+            </li>
+
+            {% if  user.profile.is_manager or user.profile.is_mainHr %}
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="pending-tab" data-bs-toggle="tab" href="#pending" role="tab" aria-controls="pending" aria-selected="false">Pending Applicants</a>
+            </li>
+            {% endif %}
+            
+        </ul>
+        <div class="tab-content" id="applicantTabsContent">
+            <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
+                {% if new_applicants %}
+                    <table class="table">
+                        <!-- Display new applicants -->
+                        <thead>
+                            <tr>
+                                <th scope="col">Applicant Name</th>
+                                <th scope="col">Gender</th>
+                                <th scope="col">Available Date</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for applicant in new_applicants %}
+                                <tr>
+                                    <td>{{ applicant.f_name }} {{ applicant.l_name }}</td>
+                                    <td>{{ applicant.gender }}</td>
+                                    <td>{{ applicant.available_date }}</td>
+                                    <td>
+                                        <!-- Render applicant actions -->
+                                        <a href="{% url 'view_profile' applicant.slug %}" class="btn btn-primary">View Profile</a>
+                                        {% if request.user.profile.is_teamlead or request.user.profile.is_teamMember %}
+                                        <a href="{{ applicant.meeting_schedule.scheduled_meet_link }}" class="btn btn-success" target="_blank">Join Meeting</a>
+                                        {% if applicant.meeting_schedule %}
+                                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#giveReview{{ applicant.slug }}">Give Review</button>
+                                        {% else %}
+                                            <!-- Meeting schedule not available -->
+                                            No Action
+                                        {% endif %}   
+                                        {% endif %} 
+                                        <div class="modal fade" id="giveReview{{ applicant.slug }}" tabindex="-1" aria-labelledby="giveReviewLabel{{ applicant.slug }}" aria-hidden="true" data-bs-backdrop="false">
+                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                <div class="modal-content">
+                                                    <form method="post" >
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="giveReviewLabel{{ applicant.slug }}">Give Review</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            {% csrf_token %}
+                                                            <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="decision" id="accept" value="accept" required>
+                                                            <label class="form-check-label" for="accept">Accept</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="decision" id="reject" value="reject" required>
+                                                            <label class="form-check-label" for="reject">Reject</label>
+                                                        </div>
+                                                            <label for="reason">Reason</label>
+                                                            <textarea class="form-control" name="reason" placeholder="Specify Reason here...." required></textarea>
+
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <input type="hidden" name="job_application_slug" value="{{ applicant.slug }}">
+                                                            <button type="submit" name="review" class="btn btn-primary">Give Review</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewLogs{{ applicant.slug }}">View Logs</button>
+                                        <div class="modal fade" id="viewLogs{{ applicant.slug }}" tabindex="-1" aria-labelledby="viewLogsLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="viewLogsLabel{{ applicant.slug }}">Base HR Logs</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        {% if applicant.student_logs %}
+                                                            <p> Student Status: {{ applicant.student_logs.0 }}</p>
+                                                            <p> Applied Date: {{ applicant.student_logs.1.applied_on }}</p>
+                                                        {% endif %}
+                                                        {% if applicant.base_hr_logs %}
+
+                                                        {% for key, value in applicant.base_hr_logs.items %}
+                                                        {% if 'open' in key  and value.3 != "status" %}
+
+                                                            <h4>{{ key }}</h4>
+                                                            <p>Username: {{ value.0 }}</p>
+                                                            <p>Recent Date: {{ value.1 }}</p>
+                                                            <p>Viewed On: {{ value.2 }}</p>
+                                                            <p>Status: {{ value.3 }}</p>
+                                                            {% if value.3 == "Rejected" or value.3 == "Accepted" %}
+                                                                <p>Review Heading: {{ value.4 }}</p>
+                                                                <p>Review Reason: {{ value.5 }}</p>
+                                                            {% endif %}
+                                                            {% if value.6  %}
+                                                                {% if value|length > 4 %}
+                                                                    <h5>Meeting Details:</h5>
+                                                                    <p>Meeting On: {{ value.6.meeting_on }}</p>
+                                                                    <p>Meeting Mail Status: {{ value.6.meeting_mail.0 }}</p>
+                                                                    <p>Meeting Mail Date: {{ value.6.meeting_mail.1 }}</p>
+                                                                    <p>Forward Status: {{ value.6.forward_status.0 }}</p>
+                                                                    <p>Forward Status Date: {{ value.6.forward_status.1 }}</p>
+                                                                    <p>Forward Members: {{ value.6.forward_members|join:', ' }}</p>
+                                                                {% endif %}
+                                                            {% endif %}
+
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                        {% else %}
+                                                            <p>No base HR logs available.</p>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No new applicants for this job.</p>
+                {% endif %}
+            </div>
+            <div class="tab-pane fade" id="accepted" role="tabpanel" aria-labelledby="accepted-tab">
+                {% if accepted_applicants %}
+                    <table class="table">
+                        <!-- Display accepted applicants -->
+                        <thead>
+                            <tr>
+                                <th scope="col">Applicant Name</th>
+                                <th scope="col">Gender</th>
+                                <th scope="col">Available Date</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for applicant in accepted_applicants %}
+                                <tr>
+                                    <td>{{ applicant.f_name }} {{ applicant.l_name }}</td>
+                                    <td>{{ applicant.gender }}</td>
+                                    <td>{{ applicant.available_date }}</td>
+                                    <td>
+                                        <!-- Render applicant actions -->
+                                        <a href="{% url 'view_profile' applicant.slug %}" class="btn btn-primary">View Profile</a>
+                                        {% if user.profile.is_hr %}
+                                        {% if applicant.meetingschedule_set.exists %}
+                                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewMeeting{{ applicant.slug }}">View Meeting</button>
+                                                <div class="modal fade" id="viewMeeting{{ applicant.slug }}" tabindex="-1" aria-labelledby="viewMeetingLabel{{ applicant.slug }}" aria-hidden="true">
+                                                    <!-- Your modal content to display meeting details, attendees, cancel meeting, and reschedule meeting buttons... -->
+                                                    <!-- Add this modal for viewing meeting details -->
+                                                        <div class="modal-dialog modal-dialog-centered modal-md">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="viewMeetingModalLabel">View Meeting Details</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <!-- Display meeting details here -->
+                                                                    <p><strong>Scheduled Date:</strong> {{ applicant.meeting_schedule.scheduled_meet_date }}</p>
+                                                                    <p><strong>Scheduled Time:</strong> {{ applicant.meeting_schedule.scheduled_meet_time }}</p>
+                                                                    <p><strong>Attendees:</strong></p>
+                                                                    <ul>
+                                                                        {% for attendee in applicant.meeting_schedule.scheduled_meet_attendees.all %}
+                                                                            <li>{{ attendee.username }} </li>
+                                                                        {% endfor %}
+                                                                    </ul>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                    <!-- Add buttons for cancel meeting and reschedule meeting if needed -->
+                                                                    <form method="post" action="{% url 'view_applicants' job_slug=job.slug %}">
+                                                                        {% csrf_token %}
+                                                                        <input type="hidden" name="action" value="cancel_meeting">
+                                                                        <input type="hidden" name="job_application" value="{{ applicant.slug }}">
+                                                                        <button type="submit" class="btn btn-danger">Cancel Meeting</button>
+                                                                    </form>
+                                                                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#rescheduleMeetingModal{{ applicant.slug }}">Reschedule Meeting</button>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal fade" id="rescheduleMeetingModal{{ applicant.slug }}" tabindex="-1" aria-labelledby="rescheduleMeetingLabel{{ applicant.slug }}" aria-hidden="true" data-bs-backdrop="false">
+                                                                <div class="modal-dialog modal-dialog-centered modal-md">
+                                                                    <div class="modal-content">
+                                                                        <form method="post">
+                                                                            <div class="modal-header">
+                                                                                <h5 class="modal-title" id="rescheduleMeetingLabel{{ applicant.slug }}">Reschedule Meeting</h5>
+                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                            </div>
+                                                                            <div class="modal-body">
+                                                                                {% csrf_token %}
+                                                                                <!-- Display existing meeting details for reference -->
+                                                                                <p><strong>Existing Scheduled Date:</strong> {{ applicant.meeting_schedule.scheduled_meet_date }}</p>
+                                                                                <p><strong>Existing Scheduled Time:</strong> {{ applicant.meeting_schedule.scheduled_meet_time }}</p>
+                                                                                <p><strong>Existing Attendees:</strong></p>
+                                                                                <ul>
+                                                                                    {% for attendee in applicant.meeting_schedule.scheduled_meet_attendees.all %}
+                                                                                        <li>{{ attendee.username }}</li>
+                                                                                    {% endfor %}
+                                                                                </ul>
+                                        
+                                                                                <!-- Your existing form fields for rescheduling -->
+                                                                                <label for="scheduled_meet_date">Rescheduled Date</label>
+                                                                                <input type="date" class="form-control" name="scheduled_meet_date" required>
+                                                                                <label for="scheduled_meet_time">Rescheduled Time</label>
+                                                                                <input type="time" class="form-control" name="scheduled_meet_time" required>
+                                                                                <label for="scheduled_meet_link">Meeting Link</label>
+                                                                                <input type="url" class="form-control" name="scheduled_meet_link" placeholder="Enter Meeting Link" required>
+                                                                                <input type="hidden" name="job_application" value="{{ applicant.slug }}">
+                                                                                <label for="scheduled_meet_attendees">Attendees</label>
+                                                                                <div class="form-group">
+                                                                                    {{ form.scheduled_meet_attendees.errors }}
+                                                                                    {% for choice in form.scheduled_meet_attendees %}
+                                                                                        <div class="form-check">
+                                                                                            {{ choice.tag }}
+                                                                                            <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                                                                                        </div>
+                                                                                    {% endfor %}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                                <button type="submit" class="btn btn-warning">Reschedule Meeting</button>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            {% else %}
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleMeeting{{ applicant.slug }}">Schedule Meeting</button>
+                                        {% endif %}
+                                        {% endif %}
+                                        <div class="modal fade" id="scheduleMeeting{{ applicant.slug }}" tabindex="-1" aria-labelledby="scheduleMeetingLabel{{ applicant.slug }}" aria-hidden="true" data-bs-backdrop="false">
+                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                <div class="modal-content">
+                                                <form method="post">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="scheduleMeetingLabel{{ applicant.slug }}">Schedule Meeting</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        {% csrf_token %}
+                                                        
+                                                        <label for="scheduled_meet_date">Scheduled Date</label>
+                                                        <input type="date" class="form-control" name="scheduled_meet_date" required>
+
+                                                        <label for="scheduled_meet_time">Scheduled Time</label>
+                                                        <input type="time" class="form-control" name="scheduled_meet_time" required>
+
+                                                        <label for="scheduled_meet_link">Meeting Link</label>
+                                                        <input type="url" class="form-control" name="scheduled_meet_link" placeholder="Enter Meeting Link" required>
+
+                                                        <input type="hidden" name="job_application" value="{{ applicant.slug }}">
+                                                        <label for="scheduled_meet_attendees">Attendees</label>
+                                                        <div class="form-group">
+                                                            {{ form.scheduled_meet_attendees.errors }}
+                                                            {% for choice in form.scheduled_meet_attendees %}
+                                                                <div class="form-check">
+                                                                    {{ choice.tag }}
+                                                                    <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                                                                </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit"  class="btn btn-primary">Schedule Meeting</button>
+                                                    </div>
+                                                </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {% if user.profile.is_mainHr %}
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendMail{{ applicant.slug }}">Send Mail</button>
+                                            <div class="modal fade" id="sendMail{{ applicant.slug }}" tabindex="-1" aria-labelledby="sendMailLabel{{ applicant.slug }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <form method="post">
+                                                            {% csrf_token %}
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Send Email</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <label for="subject">Subject</label>
+                                                                <input type="text" class="form-control" name="subject" placeholder="Enter Subject" required>
+                                                                <label for="message">Message</label>
+                                                                <textarea class="form-control" name="message" placeholder="Enter Message" required></textarea>
+
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                <input type="hidden" name="job_application_slug" value="{{ applicant.slug }}">
+                                                                <button type="submit" name="mail" class="btn btn-primary">Send Email</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <form method="post" >
+                                                {% csrf_token %}
+                                                <input type="hidden" name="job_application_slug" value="{{ applicant.slug }}">
+                                                <input type="submit" name="sendtobasehr" class="btn btn-success" value="Send to Base Hr" {% if applicant.mainHr_to_hr  %}disabled{% endif %}>
+                                            </form>
+
+                                        {% endif %}
+
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewLogs{{ applicant.slug }}">View Logs</button>
+                                        <div class="modal fade" id="viewLogs{{ applicant.slug }}" tabindex="-1" aria-labelledby="viewLogsLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="viewLogsLabel{{ applicant.slug }}">Base HR Logs</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        {% if applicant.student_logs %}
+                                                            <p> Student Status: {{ applicant.student_logs.0 }}</p>
+                                                            <p> Applied Date: {{ applicant.student_logs.1.applied_on }}</p>
+                                                        {% endif %}
+                                                        {% if applicant.base_hr_logs %}
+                                                            
+                                                            {% for key, value in applicant.base_hr_logs.items %}
+                                                                {% if 'open' in key and not 'open_count' in key and value.3 != status %}
+                                                                    <h4>{{ key }}</h4>
+                                                                    <p>Username: {{ value.0 }}</p>
+                                                                    <p>Recent Date: {{ value.1 }}</p>
+                                                                    <p>Viewed On: {{ value.2 }}</p>
+                                                                    <p>Status: {{ value.3 }}</p>
+                                                                    {% if value.3 == "Rejected" or value.3 == "Accepted" %}
+                                                                        <p>Review Heading: {{ value.4 }}</p>
+                                                                        <p>Review Reason: {{ value.5 }}</p>
+                                                                    {% endif %}
+                                                                    {% if value.6  %}
+                                                                        {% if value|length > 4 %}
+                                                                            <h5>Meeting Details:</h5>
+                                                                            <p>Meeting On: {{ value.6.meeting_on }}</p>
+                                                                            <p>Meeting Mail Status: {{ value.6.meeting_mail.0 }}</p>
+                                                                            <p>Meeting Mail Date: {{ value.6.meeting_mail.1 }}</p>
+                                                                            <p>Forward Status: {{ value.6.forward_status.0 }}</p>
+                                                                            <p>Forward Status Date: {{ value.6.forward_status.1 }}</p>
+                                                                            <p>Forward Members: {{ value.6.forward_members|join:', ' }}</p>
+                                                                        {% endif %}
+                                                                    {% endif %}
+
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <p>No base HR logs available.</p>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {% if request.user.profile.is_teamMember %}
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#memberviewReviewsModal{{ applicant.slug }}">View Reviews</button>
+                                        <div class="modal fade" id="memberviewReviewsModal{{ applicant.slug }}" tabindex="-1" aria-labelledby="memberviewReviewsModalLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="memberviewReviewsModalLabel{{ applicant.slug }}">Reviews for {{ applicant.f_name }} {{ applicant.l_name }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Reviewer</th>
+                                                                    <th>Decision</th>
+                                                                    <th>Reason</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for review in applicant.meeting_schedule.meetingreview_set.all %}
+                                                                    {% if review.reviewer.username == request.user.username %}
+                                                                        <tr>
+                                                                            <td>{{ review.reviewer.username }}</td>
+                                                                            <td>{{ review.decision }}</td>
+                                                                            <td>{{ review.reason }}</td>
+                                                                        </tr>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% if not request.user.profile.is_teamMember %}
+                                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#acceptReason{{ applicant.slug }}">Acceptance Reason</button>
+                                        <div class="modal fade" id="acceptReason{{ applicant.slug }}" tabindex="-1" aria-labelledby="acceptReasonLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="acceptReasonLabel{{ applicant.slug }}">acceptance Reason</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p><strong>Title of acceptance:</strong> {{ applicant.acceptance_details.title_of_acceptance }}</p>
+                                                        <p><strong>Reason:</strong> {{ applicant.acceptance_details.reason }}</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No accepted applicants for this job.</p>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="rejected" role="tabpanel" aria-labelledby="rejected-tab">
+                {% if rejected_applicants %}
+                    <table class="table">
+                        <!-- Display rejected applicants -->
+                        <thead>
+                            <tr>
+                                <th scope="col">Applicant Name</th>
+                                <th scope="col">Gender</th>
+                                <th scope="col">Available Date</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for applicant in rejected_applicants %}
+                                <tr>
+                                    <td>{{ applicant.f_name }} {{ applicant.l_name }}</td>
+                                    <td>{{ applicant.gender }}</td>
+                                    <td>{{ applicant.available_date }}</td>
+                                    <td>
+                                        <!-- Render applicant actions -->
+                                        <a href="{% url 'view_profile' applicant.slug %}" class="btn btn-primary">View Profile</a>
+                                        {% if not request.user.profile.is_teamMember %}
+                                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectionReason{{ applicant.slug }}">Rejection Reason</button>
+                                        <div class="modal fade" id="rejectionReason{{ applicant.slug }}" tabindex="-1" aria-labelledby="rejectionReasonLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="rejectionReasonLabel{{ applicant.slug }}">Rejection Reason</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p><strong>Title of Rejection:</strong> {{ applicant.rejection_details.title_of_rejection }}</p>
+                                                        <p><strong>Reason:</strong> {{ applicant.rejection_details.reason }}</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% if request.user.profile.is_teamMember %}
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#memberviewReviewsModal{{ applicant.slug }}">View Reviews</button>
+                                        <div class="modal fade" id="memberviewReviewsModal{{ applicant.slug }}" tabindex="-1" aria-labelledby="memberviewReviewsModalLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="memberviewReviewsModalLabel{{ applicant.slug }}">Reviews for {{ applicant.f_name }} {{ applicant.l_name }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Reviewer</th>
+                                                                    <th>Decision</th>
+                                                                    <th>Reason</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for review in applicant.meeting_schedule.meetingreview_set.all %}
+                                                                    {% if review.reviewer.username == request.user.username %}
+                                                                        <tr>
+                                                                            <td>{{ review.reviewer.username }}</td>
+                                                                            <td>{{ review.decision }}</td>
+                                                                            <td>{{ review.reason }}</td>
+                                                                        </tr>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewLogs{{ applicant.slug }}">View Logs</button>
+                                        <div class="modal fade" id="viewLogs{{ applicant.slug }}" tabindex="-1" aria-labelledby="viewLogsLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="viewLogsLabel{{ applicant.slug }}">Base HR Logs</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        {% if applicant.base_hr_logs %}
+                                                            <p>Open Count: {{ applicant.base_hr_logs.open_count }}</p>
+
+                                                            {% for key, value in applicant.base_hr_logs.items %}
+                                                                {% if 'open' in key and not 'open_count' in key %}
+                                                                    <h4>{{ key }}</h4>
+                                                                    <p>Username: {{ value.0 }}</p>
+                                                                    <p>Recent Date: {{ value.1 }}</p>
+                                                                    <p>Viewed On: {{ value.2 }}</p>
+                                                                    <p>Status: {{ value.3 }}</p>
+                                                                    {% if value.3 == "Rejected" or value.3 == "Accepted" %}
+                                                                        <p>Review Heading: {{ value.4 }}</p>
+                                                                        <p>Review Reason: {{ value.5 }}</p>
+                                                                    {% endif %}
+
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <p>No base HR logs available.</p>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No rejected applicants for this job.</p>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="finalreviewed" role="tabpanel" aria-labelledby="finalreviewed-tab">
+                {% if final_reviewed_applicants %}
+                    <!-- Display reviewed applicants -->
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Applicant Name</th>
+                                <th scope="col">Gender</th>
+                                <th scope="col">Available Date</th>
+                                <th>Total Reviews</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for applicant in final_reviewed_applicants %}
+                                <tr>
+                                    <td>{{ applicant.f_name }} {{ applicant.l_name }}</td>
+                                    <td>{{ applicant.gender }}</td>
+                                    <td>{{ applicant.available_date }}</td>
+                                    <td>{{ applicant.meeting_schedule.meetingreview_set.count }}</td>
+                                    <td>
+                                        <!-- Render applicant actions -->
+                                        <a href="{% url 'view_profile' applicant.slug %}" class="btn btn-primary">View Profile</a>
+                                        <form method="post" >
+                                            {% csrf_token %}
+                                            <input type="hidden" name="job_application_slug" value="{{ applicant.slug }}">
+                                            {% comment %} <input type="submit" name="accept" class="btn btn-success" value="Forward to Manager" {% if applicant.teamlead_is_accepted or applicant.rejectiondetails_set.exists  %}disabled{% endif %}> {% endcomment %}
+
+                                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#acceptModal{{ applicant.slug }}" {% if applicant.teamlead_is_accepted or applicant.rejectiondetails_set.exists  %}disabled{% endif %}>Forward to Manager </button>
+                                            <div class="modal fade" id="acceptModal{{ applicant.slug }}" tabindex="-1" aria-labelledby="acceptModalLabel{{ applicant.slug }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <form method="post" action="{% url 'view_profile' applicant_slug=applicant.slug %}">
+                                                            {% csrf_token %}
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="acceptModalLabel">Accept Applicant</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>accept reason</p>
+                                                                <label for="title_of_acceptance" > Title of acception</label>
+                                                                <input type="text" class="form-control" name="title_of_acceptance" placeholder="Title of acceptance" required>
+                                                                <label for="reason">Reason</label>
+                                                                <textarea class="form-control" name="reason" placeholder="Specify Reason here...." required></textarea>
+                                        
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                <button type="submit" name="accept" class="btn btn-success">Accept</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    
+                                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ applicant.slug }}" {% if applicant.teamlead_is_accepted or applicant.rejectiondetails_set.exists %}disabled{% endif %}>Reject</button>
+                                        {% if applicant.rejectiondetails_set.exists and not applicant.teamlead_is_accepted %}
+                                        <form method="post"  style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="job_application_slug" value="{{ applicant.slug }}">
+                                            <input type="submit" name="reset" class="btn btn-warning" value="Reset">
+                                        </form>                                                       
+                                        {% endif %}
+                                        <div class="modal fade" id="rejectModal{{ applicant.slug }}" tabindex="-1" aria-labelledby="rejectModalLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form method="post">
+                                                        {% csrf_token %}
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="rejectModalLabel">Reject Applicant</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Reject reason</p>
+                                                            <label for="title_of_rejection" > Title of Rejection</label>
+                                                            <input type="text" class="form-control" name="title_of_rejection" placeholder="Title of Rejection" required>
+                                                            <label for="reason">Reason</label>
+                                                            <textarea class="form-control" name="reason" placeholder="Specify Reason here...." required></textarea>
+                                    
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            
+                                                            <input type="hidden" name="job_application_slug" value="{{ applicant.slug }}">
+                                                            <button type="submit" name="reject" class="btn btn-danger">Reject</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No reviewed applicants for this job.</p>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="reviewedByYou" role="tabpanel" aria-labelledby="reviewedByYou-tab">
+                {% if reviewed_by_you %}
+                    <!-- Display reviewed applicants -->
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Applicant Name</th>
+                                <th scope="col">Gender</th>
+                                <th scope="col">Available Date</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for applicant in reviewed_by_you %}
+                                <tr>
+                                    <td>{{ applicant.f_name }} {{ applicant.l_name }}</td>
+                                    <td>{{ applicant.gender }}</td>
+                                    <td>{{ applicant.available_date }}</td>
+                                    <td>
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#leadviewReviewsModal{{ applicant.slug }}">View Reviews</button>
+                                        <!-- Modal for displaying reviews -->
+                                        <div class="modal fade" id="leadviewReviewsModal{{ applicant.slug }}" tabindex="-1" aria-labelledby="leadviewReviewsModalLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="leadviewReviewsModalLabel{{ applicant.slug }}">Reviews for {{ applicant.f_name }} {{ applicant.l_name }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Reviewer</th>
+                                                                    <th>Decision</th>
+                                                                    <th>Reason</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for review in applicant.meeting_schedule.meetingreview_set.all %}
+                                                                    {% if review.reviewer.profile.is_teamlead %}
+                                                                        <tr>
+                                                                            <td>{{ review.reviewer.username }}</td>
+                                                                            <td>{{ review.decision }}</td>
+                                                                            <td>{{ review.reason }}</td>
+                                                                        </tr>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {% if applicant.meeting_schedule %}
+                                            {% if applicant.has_review %}
+                                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#changeReview{{ applicant.slug }}">Change Your Review</button>
+                                            {% endif %}
+                                        {% endif %}
+                                        <div class="modal fade" id="changeReview{{ applicant.slug }}" tabindex="-1" aria-labelledby="changeReviewLabel{{ applicant.slug }}" aria-hidden="true" data-bs-backdrop="false">
+                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                <div class="modal-content">
+                                                    <form method="post" >
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="changeReviewLabel{{ applicant.slug }}">Change Your Review</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            {% csrf_token %}
+                                                            <!-- Prefill the form fields with existing review data -->
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="decision" id="accept" value="accept" {% if applicant.has_review and applicant.review.decision == 'accept' %}checked{% endif %} required>
+                                                                <label class="form-check-label" for="accept">Accept</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="decision" id="reject" value="reject" {% if applicant.has_review and applicant.review.decision == 'reject' %}checked{% endif %} required>
+                                                                <label class="form-check-label" for="reject">Reject</label>
+                                                            </div>
+                                                            <label for="reason">Reason</label>
+                                                            <textarea class="form-control" name="reason" placeholder="Specify Reason here...." required>{% if applicant.has_review %}{{ applicant.review.reason }}{% endif %}</textarea>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <input type="hidden" name="job_application_slug" value="{{ applicant.slug }}">
+                                                            <button type="submit" name="review" class="btn btn-primary">Change Review</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>    
+                                        
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No reviewed applicants for this job.</p>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="reviewedByTeamMembers" role="tabpanel" aria-labelledby="reviewedByTeamMembers-tab">
+                {% if reviewed_by_team_member %}
+                    <!-- Display reviewed applicants -->
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Applicant Name</th>
+                                <th scope="col">Gender</th>
+                                <th scope="col">Available Date</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for applicant in reviewed_by_team_member %}
+                                <tr>
+                                    <td>{{ applicant.f_name }} {{ applicant.l_name }}</td>
+                                    <td>{{ applicant.gender }}</td>
+                                    <td>{{ applicant.available_date }}</td>
+                                    <td>
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#teamviewReviewsModal{{ applicant.slug }}">View Reviews</button>
+                                        <!-- Modal for displaying reviews -->
+                                        <div class="modal fade" id="teamviewReviewsModal{{ applicant.slug }}" tabindex="-1" aria-labelledby="teamviewReviewsModalLabel{{ applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="teamviewReviewsModalLabel{{ applicant.slug }}">Reviews for {{ applicant.f_name }} {{ applicant.l_name }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Reviewer</th>
+                                                                    <th>Decision</th>
+                                                                    <th>Reason</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for review in applicant.meeting_schedule.meetingreview_set.all %}
+                                                                    {% if review.reviewer.profile.is_teamMember %}
+                                                                        <tr>
+                                                                            <td>{{ review.reviewer.username }}</td>
+                                                                            <td>{{ review.decision }}</td>
+                                                                            <td>{{ review.reason }}</td>
+                                                                        </tr>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No reviewed applicants for this job.</p>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                {% if pending_applicants  %}
+                    <!-- Display reviewed applicants -->
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Applicant Name</th>
+                                <th scope="col">Gender</th>
+                                <th scope="col">Available Date</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for applicant in pending_applicants %}
+                                <tr>
+                                    <td>{{ applicant.applicant.f_name }} {{ applicant.applicant.l_name }}</td>
+                                    <td>{{ applicant.applicant.gender }}</td>
+                                    <td>{{ applicant.applicant.available_date }}</td>
+                                    <td>
+                                        
+                                        <a href="{% url 'view_profile' applicant.applicant.slug %}" class="btn btn-primary">View Profile</a>
+                                        <a href="{{ applicant.meeting_link }}" class="btn btn-success" target="_blank">Join Meeting</a>
+                                        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#viewMeetingModal{{ applicant.applicant.slug }}">View Meeting</button>
+                                        <div class="modal fade" id="viewMeetingModal{{ applicant.applicant.slug }}" tabindex="-1" aria-labelledby="viewMeetingModalLabel{{ applicant.applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="viewMeetingModalLabel{{ applicant.applicant.slug }}">View Meeting</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p><strong>Meeting Date:</strong> {{ applicant.meeting_date }}</p>
+                                                        <p><strong>Meeting Time:</strong> {{ applicant.meeting_time }}</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#rescheduleModal{{ applicant.applicant.slug }}">Reschedule Meeting</button>
+                                                        <!-- Cancel Meeting Button -->
+                                                        <form method="post" action="{% url 'view_profile' applicant_slug=applicant.applicant.slug %}">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="cancel_meeting">
+                                                            <button type="submit" class="btn btn-danger">Cancel Meeting</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Reschedule Meeting Modal -->
+
+                                        <div class="modal fade" id="rescheduleModal{{ applicant.applicant.slug }}" tabindex="-1" aria-labelledby="rescheduleModalLabel{{ applicant.applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form method="post" action="{% url 'view_profile' applicant_slug=applicant.applicant.slug %}">
+                                                        {% csrf_token %}
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="rescheduleModalLabel{{ applicant.applicant.slug }}">Reschedule Meeting</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <!-- Display existing meeting details -->
+                                                            <p>Current Meeting Date: {{ applicant.meeting_date }}</p>
+                                                            <p>Current Meeting Time: {{ applicant.meeting_time }}</p>
+                                                            
+                                                            <!-- Form fields for rescheduling -->
+                                                            <label for="new_meeting_date">New Meeting Date</label>
+                                                            <input type="date" class="form-control" name="new_meeting_date" required>
+                                                            
+                                                            <label for="new_meeting_time">New Meeting Time</label>
+                                                            <input type="time" class="form-control" name="new_meeting_time" required>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <button type="submit" class="btn btn-primary" name="reschedule_meeting">Reschedule</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        {% if user.profile.is_manager %}
+                                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#manageracceptModal{{ applicant.applicant.slug }}"  {% if applicant.applicant.manager_is_accepted or applicant.applicant.rejectiondetails_set.exists  %}disabled{% endif %}> Forward to Main HR </button>
+                                            
+                                        {% elif user.profile.is_mainHr %}<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#manageracceptModal{{ applicant.applicant.slug }}" {% if applicant.applicant.mainHr_is_accepted or applicant.applicant.rejectiondetails_set.exists  %}disabled{% endif %}>Accept </button>
+                                            
+                                        {% endif %}
+                                        <div class="modal fade" id="manageracceptModal{{ applicant.applicant.slug }}" tabindex="-1" aria-labelledby="manageracceptModalLabel{{ applicant.applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form method="post" >
+                                                        {% csrf_token %}
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="manageracceptModalLabel">Accept Applicant</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>accept reason</p>
+                                                            <label for="title_of_acceptance" > Title of acceptance</label>
+                                                            <input type="text" class="form-control" name="title_of_acceptance" placeholder="Title of acceptance" required>
+                                                            <label for="reason">Reason</label>
+                                                            <textarea class="form-control" name="reason" placeholder="Specify Reason here...." required></textarea>
+                                    
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <input type="hidden" name="job_application_slug" value="{{ applicant.applicant.slug }}">
+                                                            <button type="submit" name="manageraccept" class="btn btn-success">Accept</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div> 
+                                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#managerrejectModal{{ applicant.applicant.slug }}" {% if applicant.manager_is_accepted or applicant.rejectiondetails_set.exists %}disabled{% endif %}>Reject</button>
+                                        {% if applicant.applicant.rejectiondetails_set.exists and not applicant.applicant.manager_is_accepted %}
+                                        <form method="post"  style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="job_application_slug" value="{{ applicant.applicant.slug }}">
+                                            <input type="submit" name="reset" class="btn btn-warning" value="Reset">
+                                        </form>                                                       
+                                        {% endif %}
+                                        <div class="modal fade" id="managerrejectModal{{ applicant.applicant.slug }}" tabindex="-1" aria-labelledby="managerrejectModalLabel{{ applicant.applicant.slug }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form method="post">
+                                                        {% csrf_token %}
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="managerrejectModalLabel">Reject Applicant</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Reject reason</p>
+                                                            <label for="title_of_rejection" > Title of Rejection</label>
+                                                            <input type="text" class="form-control" name="title_of_rejection" placeholder="Title of Rejection" required>
+                                                            <label for="reason">Reason</label>
+                                                            <textarea class="form-control" name="reason" placeholder="Specify Reason here...." required></textarea>
+                                    
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            
+                                                            <input type="hidden" name="job_application_slug" value="{{ applicant.applicant.slug }}">
+                                                            <button type="submit" name="reject" class="btn btn-danger">Reject</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No reviewed applicants for this job.</p>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+{% endblock content %}

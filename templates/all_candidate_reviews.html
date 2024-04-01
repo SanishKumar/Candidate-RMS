@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="mb-4">All Candidate Reviews</h1>
+
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Applicant Name</th>
+                    <th scope="col">Job Name</th>
+                    <th scope="col">Number of Reviews</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for applicant in distinct_applicants %}
+                    <tr>
+                        <td>{{ applicant.meeting_schedule__job_application__f_name }} {{ applicant.meeting_schedule__job_application__l_name }}</td>
+                        <td>{{ applicant.meeting_schedule__job_application__job__job_name }}</td>
+                        <td>{{ applicant.num_reviews }}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="window.location.href='{% url 'candidate_reviews' applicant.meeting_schedule__job_application__id %}'">View Reviews</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

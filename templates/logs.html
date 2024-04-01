@@ -1,0 +1,99 @@
+<!-- hr_logs.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Logs</title>
+    <!-- Bootstrap CSS link -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbs5shOrb6fdG/7El8I8z9zjzZ5UVLq6aef/Q8/8RQlBO#SWJToJvUomDQtQZc9DE9A" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container mt-4">
+        {% if user.profile.is_hr %}
+            <h1 class="mb-4">HR Logs</h1>
+        {% elif user.profile.is_teamlead  %}
+            <h1 class="mb-4">Team Lead Logs</h1>
+        {% elif user.profile.is_teamMember %}
+            <h1 class="mb-4">Team Member Logs</h1>
+        {% elif user.profile.is_manager %}
+            <h1 class="mb-4">Manager Logs</h1>
+        {% elif user.profile.is_mainHr %}
+            <h1 class="mb-4">Main HR Logs</h1>
+        {% elif user.profile.is_onboardingHr %}
+            <h1 class="mb-4">Onboarding HR Logs</h1>
+        {% else %}
+            <h1 class="mb-4">Logs</h1>
+        {% endif %}
+
+        <h2>Job Applications</h2>
+        <ul class="list-group">
+            {% for application in job_applications %}
+                <li class="list-group-item">
+                    {{ application.f_name }} {{ application.l_name }} - Applied on: {{ application.logs }}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <h2 class="mt-4">Forwarded status to Team Lead/members</h2>
+        <ul class="list-group">
+            {% for schedule in meeting_schedules %}
+                <li class="list-group-item">
+                    {{ schedule.job_application.f_name }} {{ schedule.job_application.l_name }} - Forwarded on: {{ schedule.logs }}
+                        
+                </li>
+            {% endfor %}
+        </ul>
+        {% if user.profile.is_teamlead or user.profile.is_teamMember or user.profile.is_manager or user.profile.is_mainHr or user.profile.is_onboardingHr %}
+        <h2> Meeting Schedules with Team Lead / Members</h2>
+        <ul class="list-group">
+            {% for schedule in meeting_schedules %}
+                <li class="list-group-item">
+                    {{ schedule.job_application.f_name }} {{ schedule.job_application.l_name }} - - Meeting scheduled on: {{ schedule.scheduled_meet_date }}        
+                </li>
+            {% endfor %}
+        </ul>
+        <h2> Accept/Reject By Team Lead & Forward status to Manager</h2>
+        <ul class="list-group">
+            {% for decision in teamLead_decisions %}
+            <li class="list-group-item">
+                {{ decision.applicant}} - - Decision: {{ decision.decision }} - - Forwarded to Manager: {{ decision.log }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if user.profile.is_manager or user.profile.is_mainHr or user.profile.is_onboardingHr %}
+        <h2> Meeting Schedule with Manager</h2>
+        <ul class="list-group">
+            {% for schedule in manager_decisions %}
+                <li class="list-group-item">
+                    {{ schedule.applicant }}  - - Meeting scheduled on: {{ schedule.meeting_date }} {{schedule.meeting_time}}      
+                </li>
+            {% endfor %}
+        </ul>
+        <h2> Accept/Reject By Manager</h2>
+        <ul class="list-group">
+            {% for decision in manager_decisions %}
+            <li class="list-group-item">
+                {{ decision.applicant}} - - Decision: {{ decision.decision }} - - Forwarded to Manager: {{ decision.log }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if user.profile.is_mainHr or user.profile.is_onboardingHr %}
+        <h2> Mail Sent to applicant</h2>
+        <ul class="list-group">
+            {% for schedule in send_mail %}
+                <li class="list-group-item">
+                    {{ schedule.applicant }}  - - Mail sent: {{ schedule.logs }}     
+                </li>
+            {% endfor %}
+        </ul>
+        
+        {% endif %}
+        
+
+    </div>
+</body>
+</html>

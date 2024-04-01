@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block title %}Candidate RMS{% endblock %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+ 
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+<!-- Add this to the head section of your HTML file -->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+<style>
+    .available-slot-button {
+        background-color: lightblue;
+        border: 1px solid blue;
+        padding: 10px;
+        margin-bottom: 5px;
+        margin-right: 5px;
+        cursor: pointer;
+        width: 100%;  /* Each button takes 100% width */
+    }
+
+    .calendar-container {
+        display: flex;
+        flex-direction: row;  /* Arrange elements horizontally */
+        width: 70%;  /* Set overall width to 70% */
+        margin: 0 auto;
+    }
+
+    #available-slots {
+        /* Optional spacing */
+        display: flex;
+        flex-wrap: wrap;  /* Wrap buttons onto the second line */
+        justify-content: space-between;
+        margin-left: 10px; /* Set margin-left for separation from the calendar */
+        width: 30%;  /* Set width to 30% of parent */
+    }
+
+    #sharedCalendar {
+        width: 70%;  /* Set width to 70% of parent */
+    
+    }
+    .available-slot-button.selected {
+        background-color: green/* Your desired color for selected slot */;
+    }
+    #next-button {
+        display: none;
+        position: absolute; /* Position the button absolutely */
+        top: 0;
+        right: 0;
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 10px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+    }
+</style>
+</head>
+<body>
+    <br>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{% url 'home' %}">Candidate RMS</a>
+        
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    {% if user.is_authenticated %}
+                        <span class="navbar-text mr-3">Welcome, {{ user.username }}</span>
+                        {% if request.user.profile.is_hr %}
+                        <span class="navbar-text mr-3">Profile - Base HR</span>
+                        {% elif request.user.profile.is_teamlead %}
+                        <span class="navbar-text mr-3">Profile - Team Lead</span>
+                        {% elif request.user.profile.is_teamMember %}
+                        <span class="navbar-text mr-3">Profile - Team Member</span>
+                        {% elif request.user.profile.is_manager %}
+                        <span class="navbar-text mr-3">Profile - Manager</span>
+                        {% elif request.user.profile.is_mainHr %}
+                        <span class="navbar-text mr-3">Profile - Main HR</span>
+                        {% elif request.user.profile.is_onboardingHr %}
+                        <span class="navbar-text mr-3">Profile - Onboarding HR</span>
+                        {% else %}
+                        <span class="navbar-text mr-3">Profile - Applicant</span>
+                        {% endif %}
+                        <a class="btn btn-primary" href="{% url 'custom_logout' %}">Logout</a>
+                    {% else %}
+                        <a class="btn btn-primary" href="{% url 'custom_login' %}">Login</a>
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        {% block content %}{% endblock %}
+    </div>
+    {% block scripts %} {% endblock %}
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+     <!-- Include FullCalendar resources -->
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+    
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Apply Now - {{ job.job_name }}</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_f_name">First Name</label>
+            {{ form.f_name }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_l_name">Last Name</label>
+            {{ form.l_name }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_gender">Gender</label>
+            {{ form.gender }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_username">Username</label>
+            {{ form.username }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_email">Email</label>
+            {{ form.email }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_ph_num">Phone Number</label>
+            {{ form.ph_num }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_linkedin">LinkedIn</label>
+            {{ form.linkedin }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_github">GitHub</label>
+            {{ form.github }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_resume">Resume</label>
+            {{ form.resume }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_hear">How did you hear about us?</label>
+            {{ form.hear }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_current_city">Current City</label>
+            {{ form.current_city }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_postal_code">Postal Code</label>
+            {{ form.postal_code }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_available_date">Available Date</label>
+            {{ form.available_date }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit Application</button>
+    </form>
+</div>
+
+{% endblock %}

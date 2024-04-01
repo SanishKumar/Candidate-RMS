@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+<div id="myCalendar"></div>
+
+<script>
+    $(document).ready(function () {
+        $('#myCalendar').fullCalendar({
+            header: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,agendaWeek,agendaDay'
+            },
+            defaultView: 'month',
+            editable: true,
+            events: [
+                // Add your events here, if needed
+            ],
+            
+        });
+    });
+</script>
+
+{% block content %}

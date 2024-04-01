@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <div class="container mt-5">
+        <!-- Job Header Block -->
+        <div class="d-flex justify-content-between">
+            <div class="d-flex align-items-center">
+                <h3>{{ job.job_name }}</h3>
+                <span class="ml-2">|</span>
+                <p class="ml-2"><h3>{{ job.job_location }}</h3></p>
+                <span class="ml-2">|</span>
+                <p class="ml-2"><h3>{{ job.job_closing_date }}</h3></p>
+            </div>
+        </div>
+        {% if not request.user.profile.is_hr and not request.user.profile.is_teamlead and not request.user.profile.is_teamMember and not request.user.profile.is_manager and not request.user.profile.is_mainHr  %}
+            {% if user_has_applied %}
+                <button class="btn btn-secondary mt-3" disabled>Already Applied</button>
+            {% else %}
+                <a href="{% url 'apply_now' job.id %}" class="btn btn-primary mt-3">Apply Now</a>
+            {% endif %}
+        {% endif %}
+        <hr>
+
+        <div>
+            <p><strong>About Company:</strong> {{ job.about_company }}</p>
+            <p><strong>Release Date:</strong> {{ job.job_release_date }}</p>
+            <p><strong>Project Role:</strong> {{ job.project_role }}</p>
+            <p><strong>Role Description:</strong> {{ job.project_role_desc }}</p>
+            <p><strong>Work Experience:</strong> {{ job.work_experience }}</p>
+            <p><strong>Must-Have Skills:</strong> {{ job.must_have_skills }}</p>
+            <p><strong>Good-to-Have Skills:</strong> {{ job.good_to_have_skills }}</p>
+            <p><strong>Job Requirements:</strong> {{ job.job_requirements }}</p>
+            <p><strong>Qualifications:</strong> {{ job.qualifications }}</p>
+            <p><strong>Job Type:</strong> {{ job.get_job_type_display }}</p>
+        </div>
+    </div>
+
+{% endblock content %}

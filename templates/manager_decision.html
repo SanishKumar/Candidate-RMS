@@ -1,0 +1,20 @@
+<!-- manager_decision_form.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Manager Decision Form</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Manager Decision Form</h1>
+        <form method="post" action="{% url 'manager_decision_view' applicant=applicant %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit Decision</button>
+        </form>
+    </div>
+</body>
+</html>

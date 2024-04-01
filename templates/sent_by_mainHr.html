@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+    <p> Sent by Main Hr</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Applicant Name</th>
+                <th scope="col">Gender</th>
+                <th scope="col">Available Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job_application in job_applications %}
+            <tr>
+                <td>{{ job_application.f_name }} {{ job_application.l_name }}</td>
+                <td>{{ job_application.gender }}</td>
+                <td>{{ job_application.available_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+```

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    
+    <div class="calendar-container">
+        <div id="sharedCalendar"></div>
+        <div id="selected-date-message"></div> 
+        <div id="selected-slot-message"></div>
+        <div id="available-slots"></div>
+        <form id="booking-form" method="post" action="{% url 'booking_confirmation' %}">
+            {% csrf_token %}
+            <input type="hidden" id="selected-date" name="selected_date" value="">
+            <input type="hidden" id="selected-slot" name="selected_slot" value="">
+            <input type="hidden" id="unique_url" name="unique_url" value="">
+            <button type="submit" id="next-button" style="display: none;">Next</button>
+        </form>
+    </div>
+    
+ 
+    <script>
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            $('#sharedCalendar').fullCalendar({
+                defaultView: 'month',
+                defaultDate: '{{start_date}}',
+                
+                dayRender: function (date, cell) {
+                    var endDate = moment('{{end_date}}').add(1, 'day');
+                    if (!date.isBetween('{{start_date}}', endDate, null, '[]')) {
+                        cell.css({
+                            'background-color': 'lightgray',
+                            'filter': 'blur(2px)'
+                        });
+                    } else {
+                        cell.css({
+                            'background-color': 'lightblue',
+                            'filter': 'none',
+                            'cursor': 'pointer' 
+                        });
+                    }
+                },
+        
+                // ... other options
+                dayClick: function(date, jsEvent, view, info) {
+                    alert('You selected: '+ info.dateStr);
+                    var endDate = moment('{{end_date}}').add(1, 'day');
+                    if (date.isBetween('{{start_date}}', endDate, null, '[]') && date.date() !== new Date()) {
+                        $.ajax({
+                            url: '{% url 'shared_calendar' unique_url=calendar_event.unique_url %}',
+                            data: {
+                                date: date.format(),
+                                action: 'get_available_slots'  // No need for calendar_event_id
+                            },
+                            success: function(response) {
+                                $('#available-slots').empty();
+                                for (let i = 0; i < response.available_slots.length; i++) {
+                                    const slot = response.available_slots[i];
+                                    const startTime = slot[0];  // Parse as Date objects if necessary
+                                    const endTime = slot[1];
+                                    console.log(startTime, endTime);
+                                    const button = $('<button>' + startTime + ' - ' + endTime + '</button>')
+                                                      .addClass('available-slot-button');
+                                    $('#available-slots').append(button);
+                                    $(button).click(function() {
+
+                                        $('#selected-slot-message').text('Selected slot: ' + startTime + ' - ' + endTime);
+                                        //change color of slot
+                                        $('.available-slot-button.selected').removeClass('selected');
+                                        $(this).addClass('selected');
+                                        // Show 'Next' button
+                                        $('#next-button').css({
+                                            top: $(this).offset().top,
+                                            display: 'inline-block'
+                                        });
+                                        $('#selected-date').val(date.format('YYYY-MM-DD'));
+                                        $('#selected-slot').val(startTime + ' - ' + endTime);
+                                        $('#unique_url').val('{{calendar_event.unique_url}}');
+                                    });
+                                }
+
+                            },
+                            error: function() {
+                                // Handle errors gracefully
+                            }
+                        });
+                        // Highlight selected date and display message:
+                        $(this).fullCalendar('gotoDate', date);
+                $('#sharedCalendar .fc-day.selected').css('background-color', 'lightblue');  // Remove previous highlight
+                $('#sharedCalendar .fc-day[data-date="' + date.format() + '"]').css('background-color', 'green').addClass('selected');
+                $('#selected-date-message').text('Your selected date is: ' + date.format('YYYY-MM-DD'));
+                    }
+                },
+            });
+        });
+        
+        
+    </script>
+
+{% endblock %}

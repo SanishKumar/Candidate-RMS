@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Booking Confirmation</h2>
+    <p>User: {{ user.username }}</p>
+    <p>Email: {{ email }}</p>
+    <p>Selected Date: {{ selected_date }}</p>
+    <p>Selected Slot: {{ selected_slot }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <input type="submit" name="confirm_booking" value="Confirm Booking">
+        <input type="hidden" name="unique_url" value="{{ unique_url }}">
+        <input type="hidden" name="selected_date" value="{{ selected_date }}">
+        <input type="hidden" name="selected_slot" value="{{ selected_slot }}">
+    </form>
+
+{% endblock %}

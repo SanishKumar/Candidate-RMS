@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="mb-4">Your Applied Jobs</h1>
+
+        {% if job_applications %}
+            <ul class="list-group">
+                {% for application_data_item in application_data %}
+                    <li class="list-group-item">
+                        <h5>{{ application_data_item.job_name }}</h5>
+                        <!-- Add more details as needed -->
+                        
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#logsModal{{ application_data_item.slug }}">
+                            View Logs
+                        </button>
+                        
+                        <div class="modal fade" id="logsModal{{ application_data_item.slug }}" tabindex="-1" role="dialog" aria-labelledby="logsModalLabel{{ application_data_item.slug }}" aria-hidden="true" data-bs-backdrop="false">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="logsModalLabel">Logs Information</h5>
+                                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Status: {{ application_data_item.status }}</p>
+                                        <p>Applied On: {{ application_data_item.applied_on }}</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>You haven't applied to any jobs yet.</p>
+        {% endif %}
+    </div>
+{% endblock %}

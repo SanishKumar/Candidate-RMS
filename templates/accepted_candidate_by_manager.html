@@ -1,0 +1,44 @@
+<!-- accepted_candidates_by_manager.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Accepted Candidates by Manager</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Accepted Candidates by MAnager</h1>
+
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Applicant</th>
+                    <th scope="col">Decision</th>
+                    <th scope="col">Reason</th>
+                    {% if user.profile.is_mainHr %}
+                    <th scope="col">Action</th>
+                    {% endif %}
+                    
+                </tr>
+            </thead>
+            <tbody>
+                {% for candidate in candidates_data %}
+                    <tr>
+                        <td>{{ candidate.applicant }}</td>
+                        <td>{{ candidate.decision }}</td>
+                        <td>{{ candidate.reason }}</td>
+                        {% if user.profile.is_mainHr %}
+                        <td><a href="{% url 'send_email' pk=candidate.applicant_id  %}" class="btn btn-primary">Send mail</a></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{% url 'home' %}" class="btn btn-primary mt-3">Back to Home</a>
+    </div>
+</body>
+</html>

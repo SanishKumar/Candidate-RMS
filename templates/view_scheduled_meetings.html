@@ -1,0 +1,36 @@
+<!-- templates/view_scheduled_meetings.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+      
+      <h1>View Scheduled Meetings</h1>
+
+      <table class="table table-bordered">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">Applicant Name</th>
+            <th scope="col">Job Name</th>
+            <th scope="col">Scheduled Date</th>
+            <th scope="col">Scheduled Time</th>
+            {% if user.profile.is_teamlead or user.profile.is_teamMember %}
+            <th scope="col">Meeting Link</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for meeting in meetings %}
+            <tr>
+              <td>{{ meeting.job_application.f_name }} {{ meeting.job_application.l_name }}</td>
+              <td>{{ meeting.job_application.job.job_name }}</td>
+              <td>{{ meeting.scheduled_meet_date }}</td>
+              <td>{{ meeting.scheduled_meet_time }}</td>
+              {% if user.profile.is_teamlead or user.profile.is_teamMember %}
+              <td><a href="{{ meeting.scheduled_meet_link }}" target="_blank">Join Meeting</a></td>
+              {% endif %}
+             </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+{% endblock %}

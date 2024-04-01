@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h1 class="mb-0">Release Job</h1>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'release_job' %}">
+                            {% csrf_token %}
+                            
+                            <div class="form-group">
+                                <label for="id_job_name">Job Name:</label>
+                                {{ form.job_name }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_job_release_date">Release Date:</label>
+                                {{ form.job_release_date }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_job_closing_date">Closing Date:</label>
+                                {{ form.job_closing_date }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_job_location">Job Location:</label>
+                                {{ form.job_location }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_about_company">About Company:</label>
+                                {{ form.about_company }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_project_role">Project Role:</label>
+                                {{ form.project_role }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_project_role_desc">Project Role Description:</label>
+                                {{ form.project_role_desc }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_work_experience">Work Experience:</label>
+                                {{ form.work_experience }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_must_have_skills">Must-Have Skills:</label>
+                                {{ form.must_have_skills }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_good_to_have_skills">Good-to-Have Skills:</label>
+                                {{ form.good_to_have_skills }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_job_requirements">Job Requirements:</label>
+                                {{ form.job_requirements }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_qualifications">Qualifications:</label>
+                                {{ form.qualifications }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_job_type">Job Type:</label>
+                                {{ form.job_type }}
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Release Job</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
